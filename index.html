@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ZIAD TEST 1 - Futuristic Cyber Terminal</title>
+    <!-- Google Fonts for Futuristic Cyberpunk Aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600;700&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- JSZip library included via CDN for generating real index.zip in browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-color: #030806;
+            --panel-bg: rgba(6, 18, 12, 0.85);
+            --panel-border: rgba(0, 255, 136, 0.35);
+            --primary-neon: #00FF88;
+            --primary-glow: rgba(0, 255, 136, 0.6);
+            --secondary-neon: #00E5FF;
+            --accent-red: #FF3366;
+            --text-main: #D4FFE8;
+            --text-dim: #5E8B73;
+            --font-title: 'Orbitron', -apple-system, sans-serif;
+            --font-mono: 'Share Tech Mono', 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* Scanline Overlay Effect */
+        .scanline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 10;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+            opacity: 0.7;
+        }
+
+        .scanline-beam {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 8px;
+            background: linear-gradient(to bottom, rgba(0, 255, 136, 0), rgba(0, 255, 136, 0.35), rgba(0, 255, 136, 0));
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 11;
+            animation: scanBeam 8s linear infinite;
+        }
+
+        @keyframes scanBeam {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(105vh); }
+        }
+
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        .app-viewport {
+            position: relative;
+            z-index: 20;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 1rem 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .glitch-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .main-title {
+            font-family: var(--font-title);
+            font-size: clamp(2rem, 6vw, 3.8rem);
+            font-weight: 900;
+            letter-spacing: 0.25em;
+            color: var(--primary-neon);
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--primary-glow), 0 0 30px rgba(0, 255, 136, 0.3);
+            position: relative;
+            user-select: none;
+        }
+
+        .main-title::before, .main-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        .main-title::before {
+            left: -2px;
+            text-shadow: 2px 0 var(--secondary-neon);
+            animation: glitch-anim-1 3.5s infinite linear alternate-reverse;
+        }
+
+        .main-title::after {
+            left: 2px;
+            text-shadow: -2px 0 var(--accent-red);
+            animation: glitch-anim-2 2.8s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 15px, 0); transform: skew(0.05deg); }
+            5% { clip: rect(42px, 9999px, 78px, 0); transform: skew(0.8deg); }
+            10% { clip: rect(0, 0, 0, 0); }
+            45% { clip: rect(0, 0, 0, 0); }
+            50% { clip: rect(60px, 9999px, 12px, 0); transform: skew(-0.5deg); }
+            54% { clip: rect(0, 0, 0, 0); }
+            100% { clip: rect(0, 0, 0, 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(0, 0, 0, 0); }
+            20% { clip: rect(80px, 9999px, 5px, 0); transform: skew(0.3deg); }
+            24% { clip: rect(0, 0, 0, 0); }
+            70% { clip: rect(10px, 9999px, 85px, 0); transform: skew(-0.8deg); }
+            75% { clip: rect(0, 0, 0, 0); }
+            100% { clip: rect(0, 0, 0, 0); }
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            letter-spacing: 0.3em;
+            color: var(--text-dim);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.15), inset 0 0 15px rgba(0, 255, 136, 0.05);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .panel-title {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            letter-spacing: 0.15em;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.72rem;
+            color: var(--primary-neon);
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--primary-neon);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-neon);
+            animation: pulseGlow 1.8s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            color: var(--primary-neon);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .cyber-input {
+            width: 100%;
+            background: rgba(3, 10, 6, 0.8);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 6px;
+            padding: 0.75rem 0.75rem 0.75rem 2.3rem;
+            color: var(--primary-neon);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .cyber-input:focus {
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 229, 255, 0.2));
+            border: 1px solid var(--primary-neon);
+            border-radius: 6px;
+            color: var(--primary-neon);
+            font-family: var(--font-title);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-neon);
+            color: #000;
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+
+        .console-output {
+            margin-top: 1.2rem;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 6px;
+            padding: 0.8rem;
+            font-size: 0.75rem;
+            height: 90px;
+            overflow-y: auto;
+            color: #88C9A1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .console-line { display: flex; gap: 8px; }
+        .console-line.success { color: var(--primary-neon); font-weight: bold; }
+        .console-line.error { color: #FF3366; font-weight: bold; }
+        .console-line.info { color: var(--secondary-neon); }
+
+        .deployment-section {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 2rem;
+            background: rgba(2, 10, 6, 0.75);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 10px;
+            padding: 1.2rem;
+        }
+
+        .deploy-title {
+            color: var(--secondary-neon);
+            font-family: var(--font-title);
+            font-size: 0.95rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .deploy-instructions {
+            font-size: 0.8rem;
+            color: #A5D6A7;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .deploy-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.6rem 0.8rem;
+            background: rgba(0, 229, 255, 0.12);
+            border: 1px solid var(--secondary-neon);
+            border-radius: 6px;
+            color: var(--secondary-neon);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: var(--secondary-neon);
+            color: #000;
+        }
+
+        footer {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanline-overlay"></div>
+    <div class="scanline-beam"></div>
+    <canvas id="matrixCanvas"></canvas>
+
+    <div class="app-viewport">
+        <header>
+            <div class="glitch-wrapper">
+                <h1 class="main-title" data-text="ZIAD TEST 1">ZIAD TEST 1</h1>
+            </div>
+            <div class="subtitle">CYBERNETIC AUTHENTICATION INTERFACE</div>
+        </header>
+
+        <main class="login-card">
+            <div class="panel-header">
+                <div class="panel-title">AUTHENTICATION</div>
+                <div class="status-badge">
+                    <span class="pulse-dot"></span> SECURE
+                </div>
+            </div>
+
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label class="form-label" for="userEmail">USER IDENTIFIER / EMAIL</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">&gt;_</span>
+                        <input type="email" id="userEmail" class="cyber-input" placeholder="Enter operator email..." required autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="userPassword">PASSCODE / KEY</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="userPassword" class="cyber-input" placeholder="••••••••••••" required autocomplete="off">
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="submit-btn"><span>INITIALIZE LOGIN</span><span class="btn-arrow">➔</span></button>
+            </form>
+
+            <div class="console-output" id="consoleLog">
+                <div class="console-line info">[SYS] Core initialized. Standing by for auth input...</div>
+            </div>
+        </main>
+
+        <section class="deployment-section">
+            <div class="deploy-title">🚀 DEPLOYMENT TOOLKIT</div>
+            <div class="deploy-instructions">
+                <ol>
+                    <li>Download index.html or index.zip below.</li>
+                    <li>Upload it to GitHub Pages or Netlify Drop.</li>
+                </ol>
+            </div>
+            <div class="deploy-actions">
+                <button type="button" class="action-btn" id="downloadZipBtn">📦 Download index.zip</button>
+                <button type="button" class="action-btn" id="downloadHtmlBtn">📄 Download index.html</button>
+            </div>
+        </section>
+
+        <footer>
+            ZIAD TEST 1 © 2026 // SECURE PROTOTYPE
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height, columns, drops;
+            const fontSize = 16;
+            const chars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEF@#$%&*<>[]{}';
+            const charArray = chars.split('');
+
+            function initCanvas() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                columns = Math.floor(width / fontSize);
+                drops = [];
+                for (let i = 0; i < columns; i++) {
+                    drops[i] = Math.floor(Math.random() * -50);
+                }
+            }
+
+            function drawMatrix() {
+                ctx.fillStyle = 'rgba(3, 8, 6, 0.08)';
+                ctx.fillRect(0, 0, width, height);
+                ctx.font = fontSize + 'px "Share Tech Mono", monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+
+                    ctx.fillStyle = '#E0FFFA';
+                    ctx.fillText(text, x, y);
+
+                    ctx.fillStyle = '#00FF88';
+                    if (y - fontSize > 0) {
+                        ctx.fillText(charArray[Math.floor(Math.random() * charArray.length)], x, y - fontSize);
+                    }
+
+                    if (y > height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            initCanvas();
+            setInterval(drawMatrix, 40);
+
+            window.addEventListener('resize', initCanvas);
+
+            const consoleLogEl = document.getElementById('consoleLog');
+
+            function logConsole(message, type = 'normal') {
+                const line = document.createElement('div');
+                line.className = `console-line ${type}`;
+                const time = new Date().toTimeString().split(' ')[0];
+                line.textContent = `[${time}] ${message}`;
+                consoleLogEl.appendChild(line);
+                consoleLogEl.scrollTop = consoleLogEl.scrollHeight;
+            }
+
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('userEmail').value.trim();
+                const password = document.getElementById('userPassword').value.trim();
+
+                if (!email || !password) return;
+
+                loginBtn.disabled = true;
+                loginBtn.style.opacity = '0.7';
+                loginBtn.innerHTML = `<span>VERIFYING...</span>`;
+
+                logConsole(`Authenticating identifier: ${email}`, 'info');
+
+                setTimeout(() => {
+                    // التحقق السري من البيانات داخل الكود
+                    if (email === "Admin991Ziad@gmail.com" && password === "6655443322#") {
+                        logConsole(`[ACCESS GRANTED] Redirecting to Peterbot video...`, 'success');
+                        setTimeout(() => {
+                            window.location.href = "https://youtu.be/Ig75ACe_zzk?si=m417RikDUbryo0La";
+                        }, 1000);
+                    } else {
+                        logConsole(`[ACCESS DENIED] Invalid Email or Password!`, 'error');
+                        loginBtn.disabled = false;
+                        loginBtn.style.opacity = '1';
+                        loginBtn.innerHTML = `<span>INITIALIZE LOGIN</span><span class="btn-arrow">➔</span>`;
+                    }
+                }, 800);
+            });
+
+            const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+            const downloadZipBtn = document.getElementById('downloadZipBtn');
+
+            function getFullHtmlSource() {
+                return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            }
+
+            downloadHtmlBtn.addEventListener('click', () => {
+                const blob = new Blob([getFullHtmlSource()], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            downloadZipBtn.addEventListener('click', () => {
+                if (typeof JSZip === 'undefined') {
+                    alert('Library loading, try again in a second.');
+                    return;
+                }
+                const zip = new JSZip();
+                zip.file("index.html", getFullHtmlSource());
+                zip.generateAsync({ type: "blob" }).then((content) => {
+                    const url = URL.createObjectURL(content);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'index.zip';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
